@@ -1,132 +1,151 @@
-// Cette fonction envoie les identifiants au serveur
+// --- FONCTION INSCRIPTION (REGISTER) ---
+async function register() {
+    const elPrenom = document.getElementById('reg-prenom');
+    const elNom = document.getElementById('reg-nom');
+    const elEmail = document.getElementById('reg-email');
+    const elMdp = document.getElementById('reg-mdp');
+    const msg = document.getElementById('error-msg');
+
+    if (!elPrenom || !elNom || !elEmail || !elMdp) return;
+
+    const bodyData = {
+        prenom: elPrenom.value,
+        nom: elNom.value,
+        email: elEmail.value,
+        mdp: elMdp.value
+    };
+
+    if (!bodyData.prenom || !bodyData.nom || !bodyData.email || !bodyData.mdp) {
+        msg.innerText = "Veuillez remplir tous les champs.";
+        msg.style.color = "#ff4d4d";
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData)
+        });
+
+        // SECURITÉ : On vérifie si c'est bien du JSON avant de parser
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new TypeError("Le serveur n'a pas renvoyé de JSON ! (Vérifiez votre serveur Node)");
+        }
+
+        const data = await response.json();
+        msg.innerText = data.message;
+        msg.style.color = data.success ? "#10b981" : "#ff4d4d";
+
+        if (data.success) {
+            elPrenom.value = ""; elNom.value = ""; elEmail.value = ""; elMdp.value = "";
+        }
+    } catch (err) {
+        msg.innerText = "Erreur d'inscription (voir console)";
+        console.error("Erreur register:", err);
+    }
+}
+
+// --- FONCTION CONNEXION (LOGIN) ---
 async function login() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
-    const errorMsg = document.getElementById('error-msg');
+    const elEmail = document.getElementById('login-email');
+    const elMdp = document.getElementById('login-mdp');
+    const msg = document.getElementById('error-msg');
+
+    if (!elEmail || !elMdp) return;
 
     try {
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password: pass })
+            body: JSON.stringify({ email: elEmail.value, mdp: elMdp.value })
         });
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            msg.innerText = "Erreur : Le serveur ne répond pas au bon format.";
+            return;
+        }
 
         const data = await response.json();
 
         if (data.success) {
-            // On enregistre le token dans le navigateur
             localStorage.setItem('myToken', data.token);
             showDashboard(data.token);
         } else {
-            errorMsg.innerText = data.message;
+            msg.innerText = data.message;
+            msg.style.color = "#ff4d4d";
         }
     } catch (err) {
-        console.error("Erreur de connexion au serveur", err);
+        msg.innerText = "Erreur de connexion (serveur injoignable)";
+        console.error("Erreur login:", err);
     }
 }
 
-// Affiche le tableau de bord si le token est valide
-function showDashboard(token) {
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('dashboard-section').style.display = 'block';
-    document.getElementById('display-token').innerText = token;
-}
-
-// Supprime le token et déconnecte
-function logout() {
-    localStorage.removeItem('myToken');
-    location.reload();
-}
-
-// Vérification automatique au chargement de la page
-window.onload = () => {
-    const savedToken = localStorage.getItem('myToken');
-    if (savedToken) {
-        showDashboard(savedToken);
-    }
-};
-
+// --- GESTION DU DASHBOARD ET DE LA CARTE ---
 let map;
 let boatMarker;
-let boatPos = [43.2965, 5.3698]; // Coordonnées de départ (ex: Marseille)
+let boatPos = [43.2965, 5.3698]; 
 
-function initMap() {
-    // Initialise la carte centrée sur le point de départ
-    map = L.map('map').setView(boatPos, 10);
-
-    // Charge les "tuiles" (le dessin de la carte)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // Crée l'icône du bateau (tu peux utiliser une image ou un marqueur simple)
-    boatMarker = L.marker(boatPos).addTo(map)
-        .bindPopup('Bateau en mouvement')
-        .openPopup();
-
-    // Lance la simulation du déplacement
-    simulateMovement();
-}
-
-function simulateMovement() {
-    setInterval(() => {
-        // On simule un petit déplacement (on ajoute un peu à la latitude/longitude)
-        boatPos[0] += 0.001; 
-        boatPos[1] += 0.002;
-
-        // Met à jour la position du marqueur sur la carte
-        boatMarker.setLatLng(boatPos);
-        
-        // Optionnel : faire suivre la caméra
-        // map.panTo(boatPos); 
-    }, 1000); // Se déplace toutes les secondes
-}
-
-// MODIFICATION de ta fonction existante showDashboard
 function showDashboard(token) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
     document.getElementById('display-token').innerText = token;
     
-    // On attend que le HTML soit affiché pour initialiser la carte
     if (!map) {
-        initMap();
+        setTimeout(initMap, 300);
     }
 }
 
-async function register() {
-    const user = document.getElementById('reg-user').value;
-    const pass = document.getElementById('reg-pass').value;
-    const msg = document.getElementById('error-msg');
+function initMap() {
+    if (!document.getElementById('map')) return;
 
-    const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: user, password: pass })
+    map = L.map('map').setView(boatPos, 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const boatIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/2904/2904913.png',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
     });
 
-    const data = await response.json();
-    msg.innerText = data.message;
-    msg.style.color = data.success ? "#10b981" : "#ff4d4d";
+    boatMarker = L.marker(boatPos, { icon: boatIcon }).addTo(map)
+        .bindPopup('<b>Navire G-Deux</b><br>Statut : Récupération GPS...')
+        .openPopup();
+
+    simulateMovement();
 }
 
-async function login() {
-    const user = document.getElementById('login-user').value;
-    const pass = document.getElementById('login-pass').value;
-    const msg = document.getElementById('error-msg');
+function simulateMovement() {
+    setInterval(async () => {
+        try {
+            const response = await fetch('/api/boat-position');
+            
+            // Si la BDD est vide, le serveur renvoie 404, on ignore proprement
+            if (!response.ok) return; 
 
-    const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: user, password: pass })
-    });
-
-    const data = await response.json();
-    if (data.success) {
-        localStorage.setItem('myToken', data.token);
-        showDashboard(data.token);
-    } else {
-        msg.innerText = data.message;
-        msg.style.color = "#ff4d4d";
-    }
+            const data = await response.json();
+            if (data.success && data.position) {
+                const newPos = [parseFloat(data.position.latitude), parseFloat(data.position.longitude)];
+                boatMarker.setLatLng(newPos);
+                console.log("GPS BDD mis à jour :", newPos);
+            }
+        } catch (err) {
+            console.log("En attente de données GPS du C++...");
+        }
+    }, 3000); // On interroge toutes les 3 secondes
 }
+
+function logout() {
+    localStorage.removeItem('myToken');
+    location.reload();
+}
+
+window.onload = () => {
+    const savedToken = localStorage.getItem('myToken');
+    if (savedToken) showDashboard(savedToken);
+};
