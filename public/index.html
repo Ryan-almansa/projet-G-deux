@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion Sécurisée</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="login-container" id="login-section">
+    <h2>Inscription / Connexion</h2>
+    
+    <div id="register-box">
+        <input type="text" id="reg-user" placeholder="Nouvel utilisateur">
+        <input type="password" id="reg-pass" placeholder="Nouveau mot de passe">
+        <button onclick="register()">Créer un compte</button>
+    </div>
+    
+    <hr style="margin: 20px 0; opacity: 0.2;">
+
+    <div id="login-box">
+        <input type="text" id="login-user" placeholder="Utilisateur">
+        <input type="password" id="login-pass" placeholder="Mot de passe">
+        <button onclick="login()">Se connecter</button>
+    </div>
+    
+    <p id="error-msg" style="color: #ff4d4d;"></p>
+</div>
+
+    <div class="dashboard-container" id="dashboard-section" style="display:none;">
+        <h2>Bienvenue sur le Dashboard</h2>
+        <p>Votre token de session est : <strong id="display-token"></strong></p>
+        <button onclick="logout()">Déconnexion</button>
+    </div>
+
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    #map { height: 400px; width: 100%; margin-top: 20px; border-radius: 8px; }
+</style>
+
+<div id="map"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
