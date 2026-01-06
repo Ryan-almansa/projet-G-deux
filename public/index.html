@@ -3,62 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projet G-Deux | Tracking Navire</title>
+    <title>Projet G-Deux | Tracking</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
     
     <style>
-        /* Style spécifique pour la carte dans le HTML si besoin */
-        #map { height: 450px; width: 100%; margin-top: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .separator { display: flex; align-items: center; text-align: center; margin: 20px 0; }
-        .separator::before, .separator::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.2); }
-        .separator:not(:empty)::before { margin-right: .5em; }
-        .separator:not(:empty)::after { margin-left: .5em; }
+        body { font-family: sans-serif; text-align: center; background: #2c3e50; color: white; }
+        input { display: block; margin: 10px auto; padding: 10px; width: 80%; max-width: 300px; border-radius: 5px; border: none; }
+        button { padding: 10px 20px; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 5px; font-size: 1rem; }
+        button:hover { background: #c0392b; }
+        #map { height: 400px; width: 90%; margin: 20px auto; border-radius: 10px; border: 2px solid white; }
+        .hidden { display: none; }
     </style>
 </head>
 
 <body>
-    <div class="login-container" id="login-section">
-        <h2>Gestion de la Flotte</h2>
-        
-        <div id="register-box">
-            <h3 style="font-size: 1.1rem; opacity: 0.8;">Nouvel Utilisateur</h3>
+    <h1>🚢 Projet G-Deux</h1>
+
+    <div id="login-section">
+        <div style="background: rgba(0,0,0,0.2); padding: 20px; margin: 20px; border-radius: 10px;">
+            <h3>Inscription</h3>
             <input type="text" id="reg-prenom" placeholder="Prénom">
             <input type="text" id="reg-nom" placeholder="Nom">
-            <input type="email" id="reg-email" placeholder="Email (Identifiant)">
+            <input type="email" id="reg-email" placeholder="Email">
             <input type="password" id="reg-mdp" placeholder="Mot de passe">
-            <button onclick="register()">Créer un compte</button>
+            <button onclick="register()">Créer Compte</button>
         </div>
-        
-        <div class="separator">OU</div>
 
-        <div id="login-box">
-            <h3 style="font-size: 1.1rem; opacity: 0.8;">Accès Membre</h3>
+        <div style="background: rgba(0,0,0,0.2); padding: 20px; margin: 20px; border-radius: 10px;">
+            <h3>Connexion</h3>
             <input type="email" id="login-email" placeholder="Email">
             <input type="password" id="login-mdp" placeholder="Mot de passe">
             <button onclick="login()">Se connecter</button>
         </div>
         
-        <p id="error-msg"></p>
+        <p id="error-msg" style="height: 20px; font-weight: bold;"></p>
     </div>
 
-    <div class="dashboard-container" id="dashboard-section" style="display:none;">
-        <div class="dashboard-header">
-            <h2>Bienvenue sur le Dashboard</h2>
-            <p>Session active : <code id="display-token"></code></p>
-        </div>
-
+    <div id="dashboard-section" class="hidden">
+        <h2>Bienvenue !</h2>
+        <p>Token Session : <span id="display-token"></span></p>
+        
         <div id="map"></div>
-
-        <button onclick="logout()" style="background: linear-gradient(135deg, #ff4b2b, #ff416c); margin-top: 30px;">
-            Déconnexion
-        </button>
-    </div>
-
-    <div class="credits">
-        <p>Projet réalisé par :</p>
-        <span class="team-names">Ryan Almansa, Sacha et Soulaimane</span>
+        
+        <button onclick="logout()">Se Déconnecter</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

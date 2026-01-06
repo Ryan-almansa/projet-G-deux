@@ -1,4 +1,6 @@
-// --- FONCTION INSCRIPTION (REGISTER) ---
+// =========================================================
+// 1. FONCTION INSCRIPTION (REGISTER)
+// =========================================================
 async function register() {
     const elPrenom = document.getElementById('reg-prenom');
     const elNom = document.getElementById('reg-nom');
@@ -6,18 +8,9 @@ async function register() {
     const elMdp = document.getElementById('reg-mdp');
     const msg = document.getElementById('error-msg');
 
-    if (!elPrenom || !elNom || !elEmail || !elMdp) return;
-
-    const bodyData = {
-        prenom: elPrenom.value,
-        nom: elNom.value,
-        email: elEmail.value,
-        mdp: elMdp.value
-    };
-
-    if (!bodyData.prenom || !bodyData.nom || !bodyData.email || !bodyData.mdp) {
+    if (!elPrenom.value || !elNom.value || !elEmail.value || !elMdp.value) {
         msg.innerText = "Veuillez remplir tous les champs.";
-        msg.style.color = "#ff4d4d";
+        msg.style.color = "orange";
         return;
     }
 
@@ -25,14 +18,13 @@ async function register() {
         const response = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bodyData)
+            body: JSON.stringify({
+                prenom: elPrenom.value,
+                nom: elNom.value,
+                email: elEmail.value,
+                mdp: elMdp.value
+            })
         });
-
-        // SECURITÉ : On vérifie si c'est bien du JSON avant de parser
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            throw new TypeError("Le serveur n'a pas renvoyé de JSON ! (Vérifiez votre serveur Node)");
-        }
 
         const data = await response.json();
         msg.innerText = data.message;
@@ -42,18 +34,18 @@ async function register() {
             elPrenom.value = ""; elNom.value = ""; elEmail.value = ""; elMdp.value = "";
         }
     } catch (err) {
-        msg.innerText = "Erreur d'inscription (voir console)";
-        console.error("Erreur register:", err);
+        console.error(err);
+        msg.innerText = "Erreur serveur.";
     }
 }
 
-// --- FONCTION CONNEXION (LOGIN) ---
+// =========================================================
+// 2. FONCTION CONNEXION (LOGIN)
+// =========================================================
 async function login() {
     const elEmail = document.getElementById('login-email');
     const elMdp = document.getElementById('login-mdp');
     const msg = document.getElementById('error-msg');
-
-    if (!elEmail || !elMdp) return;
 
     try {
         const response = await fetch('/api/login', {
@@ -61,12 +53,6 @@ async function login() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: elEmail.value, mdp: elMdp.value })
         });
-
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            msg.innerText = "Erreur : Le serveur ne répond pas au bon format.";
-            return;
-        }
 
         const data = await response.json();
 
@@ -78,30 +64,32 @@ async function login() {
             msg.style.color = "#ff4d4d";
         }
     } catch (err) {
-        msg.innerText = "Erreur de connexion (serveur injoignable)";
-        console.error("Erreur login:", err);
+        console.error(err);
+        msg.innerText = "Impossible de joindre le serveur.";
     }
 }
 
-// --- GESTION DU DASHBOARD ET DE LA CARTE ---
+// =========================================================
+// 3. GESTION DASHBOARD & CARTE (MODE DÉMO)
+// =========================================================
 let map;
 let boatMarker;
+// Point de départ (Marseille)
 let boatPos = [43.2965, 5.3698]; 
 
 function showDashboard(token) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
     document.getElementById('display-token').innerText = token;
-    
-    if (!map) {
-        setTimeout(initMap, 300);
-    }
+
+    // On lance la carte
+    if (!map) setTimeout(initMap, 300);
 }
 
 function initMap() {
-    if (!document.getElementById('map')) return;
+    if (map) return; // Sécurité pour ne pas créer 2 cartes
 
-    map = L.map('map').setView(boatPos, 12);
+    map = L.map('map').setView(boatPos, 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
@@ -114,30 +102,33 @@ function initMap() {
     });
 
     boatMarker = L.marker(boatPos, { icon: boatIcon }).addTo(map)
-        .bindPopup('<b>Navire G-Deux</b><br>Statut : Récupération GPS...')
+        .bindPopup('<b>Navire G-Deux</b><br>Mode : Simulation')
         .openPopup();
 
+    // On lance l'animation locale
     simulateMovement();
 }
 
 function simulateMovement() {
-    setInterval(async () => {
-        try {
-            const response = await fetch('/api/boat-position');
-            
-            // Si la BDD est vide, le serveur renvoie 404, on ignore proprement
-            if (!response.ok) return; 
+    console.log("Démarrage de la simulation locale...");
+    
+    // Cette boucle tourne toutes les 1 seconde (1000ms)
+    setInterval(() => {
+        // --- CALCUL MATHÉMATIQUE (SIMULATION) ---
+        // On modifie légèrement la latitude et la longitude
+        // pour faire croire que le bateau avance.
+        boatPos[0] += 0.0005; // Monte vers le Nord
+        boatPos[1] += 0.0003; // Va vers l'Est
 
-            const data = await response.json();
-            if (data.success && data.position) {
-                const newPos = [parseFloat(data.position.latitude), parseFloat(data.position.longitude)];
-                boatMarker.setLatLng(newPos);
-                console.log("GPS BDD mis à jour :", newPos);
-            }
-        } catch (err) {
-            console.log("En attente de données GPS du C++...");
-        }
-    }, 3000); // On interroge toutes les 3 secondes
+        // 1. On bouge le marqueur
+        boatMarker.setLatLng(boatPos);
+        
+        // 2. On centre la caméra sur le bateau (optionnel, supprime si ça bouge trop)
+        map.panTo(boatPos);
+
+        console.log("Nouvelle position simulée :", boatPos);
+        
+    }, 1000); 
 }
 
 function logout() {
@@ -145,6 +136,7 @@ function logout() {
     location.reload();
 }
 
+// Vérification connexion automatique
 window.onload = () => {
     const savedToken = localStorage.getItem('myToken');
     if (savedToken) showDashboard(savedToken);
