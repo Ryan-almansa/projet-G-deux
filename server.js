@@ -3,9 +3,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
 const path = require('path');
+const cors = require('cors');
+
+// 1. INITIALISATION SERVEUR    
+
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
 
 // 2. CONNEXION MARIADB (Utilisation des variables du .env)
 const db = mysql.createConnection({
@@ -17,6 +22,10 @@ const db = mysql.createConnection({
 
 db.connect(err => {
     if (err) {
+        console.log("precess.env.DB_HOST:", process.env.DB_HOST);  
+        console.log("precess.env.DB_USER:", process.env.DB_USER);  
+        console.log("precess.env.DB_NAME:", process.env.DB_NAME);       
+        console.log("precess.env.DB_PASS:", process.env.DB_PASS );       
         console.error('ERREUR BDD :', err.message);
         // Astuce : Afficher les variables pour débugger si besoin (sauf le mdp !)
         console.log('Tentative sur :', process.env.DB_HOST); 

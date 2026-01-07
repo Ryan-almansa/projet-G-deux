@@ -22,7 +22,7 @@ async function register() {
     }
 
     try {
-        const response = await fetch('/api/register', {
+        const response = await fetch('http://172.29.19.42:3000/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(bodyData)
@@ -56,7 +56,7 @@ async function login() {
     if (!elEmail || !elMdp) return;
 
     try {
-        const response = await fetch('/api/login', {
+        const response = await fetch('http://172.29.19.42:3000/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: elEmail.value, mdp: elMdp.value })
@@ -123,7 +123,7 @@ function initMap() {
 function simulateMovement() {
     setInterval(async () => {
         try {
-            const response = await fetch('/api/boat-position');
+            const response = await fetch('http://172.29.19.42:3000/api/boat-position');
             
             // Si la BDD est vide, le serveur renvoie 404, on ignore proprement
             if (!response.ok) return; 
